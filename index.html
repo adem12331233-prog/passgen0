@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>PASS GENERATOR</title>
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        background: #1a0000;
+        overflow: hidden;
+        font-family: sans-serif;
+        color: #fff;
+    }
+
+    /* نجوم حمراء تتساقط */
+    .star {
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        background: red;
+        border-radius: 50%;
+        animation: fall linear infinite;
+        opacity: 0.8;
+    }
+
+    @keyframes fall {
+        from {transform: translateY(-10vh);}
+        to {transform: translateY(110vh);}
+    }
+
+    /* صندوق تسجيل الدخول */
+    .box {
+        width: 320px;
+        padding: 25px;
+        background: #111;
+        margin: 120px auto;
+        position: relative;
+        border-radius: 8px;
+        box-shadow: 0 0 20px #000;
+    }
+
+    /* إطار أحمر متحرك حول الصندوق */
+    .box::before {
+        content: "";
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(90deg, red, transparent, red);
+        background-size: 300% 300%;
+        animation: borderMove 3s linear infinite;
+        z-index: -1;
+        border-radius: 10px;
+    }
+
+    @keyframes borderMove {
+        0% {background-position: 0% 50%;}
+        100% {background-position: 100% 50%;}
+    }
+
+    input, button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        border: none;
+        border-radius: 5px;
+        font-size: 15px;
+    }
+
+    input {
+        background: #222;
+        color: #fff;
+    }
+
+    button {
+        background: red;
+        color: #fff;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    #activationSection, #loginSection, #generatorSection {
+        display: none;
+    }
+</style>
+</head>
+<body>
+
+<!-- صفحة التفعيل -->
+<div class="box" id="activationSection">
+    <h3>جاري توليد مفتاح التفعيل...</h3>
+    <p>انتظر 10 ثواني</p>
+    <p id="timer">10</p>
+    <p id="generatedKey" style="color:#0f0;font-weight:bold"></p>
+</div>
+
+<!-- صفحة تسجيل الدخول -->
+<div class="box" id="loginSection">
+    <h3>تسجيل الدخول</h3>
+    <input id="user" placeholder="اليوزر">
+    <input id="pass" placeholder="الباسوورد" type="password">
+    <input id="key" placeholder="مفتاح التفعيل">
+    <button onclick="login()">دخول</button>
+    <p id="loginMsg" style="color:red;"></p>
+</div>
+
+<!-- صفحة توليد كلمة المرور -->
+<div class="box" id="generatorSection">
+    <h3>مولد كلمات مرور</h3>
+    <input id="ssid" placeholder="ضع اسم الشبكة">
+    <button onclick="generatePass()">توليد كلمة مرور قوية</button>
+    <p id="result" style="color:#0f0;font-size:18px;margin-top:10px"></p>
+</div>
+
+<script>
+/* إنشاء النجوم المتساقطة */
+for (let i = 0; i < 80; i++) {
+    let s = document.createElement("div");
+    s.className = "star";
+    s.style.left = Math.random() * 100 + "vw";
+    s.style.animationDuration = (3 + Math.random() * 5) + "s";
+    s.style.animationDelay = Math.random() * 5 + "s";
+    document.body.appendChild(s);
+}
+
+document.getElementById("activationSection").style.display = "block";
+
+let seconds = 10;
+let realActivationKey = "";
+
+/* عداد توليد مفتاح التفعيل */
+let countdown = setInterval(() => {
+    seconds--;
+    document.getElementById("timer").innerText = seconds;
+
+    if (seconds <= 0) {
+        clearInterval(countdown);
+        // توليد مفتاح تفعيل صالح
+        realActivationKey = "KEY-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+        document.getElementById("generatedKey").innerText = "مفتاح التفعيل: " + realActivationKey;
+        setTimeout(() => {
+            document.getElementById("activationSection").style.display = "none";
+            document.getElementById("loginSection").style.display = "block";
+        }, 1500);
+    }
+}, 1000);
+
+
+/* تسجيل الدخول */
+function login() {
+    let u = document.getElementById("user").value;
+    let p = document.getElementById("pass").value;
+    let k = document.getElementById("key").value;
+
+    if (u === "PASSGEN" && p === "pass1233wifi" && k === realActivationKey) {
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("generatorSection").style.display = "block";
+    } else {
+        document.getElementById("loginMsg").innerText = "بيانات غير صحيحة!";
+    }
+}
+
+/* توليد كلمة مرور قوية */
+function generatePass() {
+    let ssid = document.getElementById("ssid").value;
+    if (!ssid) {
+        document.getElementById("result").innerText = "يرجى كتابة اسم الشبكة";
+        return;
+    }
+
+    let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let pass = "";
+    for (let i = 0; i < 16; i++) {
+        pass += chars[Math.floor(Math.random() * chars.length)];
+    }
+
+    document.getElementById("result").innerText =
+        "كلمة مرور الشبكة (" + ssid.toUpperCase() + "): " + pass;
+}
+</script>
+
+</body>
+</html>
