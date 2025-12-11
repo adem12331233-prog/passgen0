@@ -7,52 +7,59 @@
     body {
         margin: 0;
         height: 100vh;
-        background: #1a0000;
+        background: #000;
         overflow: hidden;
         font-family: sans-serif;
         color: #fff;
     }
 
-    /* نجوم حمراء تتساقط */
+    /* نجوم متساقطة */
     .star {
         position: absolute;
-        width: 5px;
-        height: 5px;
+        width: 4px;
+        height: 4px;
         background: red;
         border-radius: 50%;
-        animation: fall linear infinite;
         opacity: 0.8;
+        animation: fall linear infinite;
+        filter: drop-shadow(0 0 6px red);
     }
 
     @keyframes fall {
-        from {transform: translateY(-10vh);}
-        to {transform: translateY(110vh);}
+        0% {transform: translateY(-10vh);}
+        100% {transform: translateY(110vh);}
     }
 
-    /* صندوق تسجيل الدخول */
-    .box {
-        width: 320px;
-        padding: 25px;
-        background: #111;
-        margin: 120px auto;
-        position: relative;
-        border-radius: 8px;
-        box-shadow: 0 0 20px #000;
+    /* صناديق وسط الشاشة */
+    .centerBox {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 340px;
+        padding: 30px;
+        background: #0d0d0d;
+        border-radius: 10px;
+        box-shadow: 0 0 25px #000;
+        text-align: center;
+        animation: fadeIn 1s ease-in-out;
     }
 
-    /* إطار أحمر متحرك حول الصندوق */
-    .box::before {
+    @keyframes fadeIn {
+        from {opacity: 0; transform: translate(-50%, -60%);}
+        to {opacity: 1; transform: translate(-50%, -50%);}
+    }
+
+    /* إطار أحمر متحرك */
+    .centerBox::before {
         content: "";
         position: absolute;
-        top: -2px;
-        left: -2px;
-        right: -2px;
-        bottom: -2px;
+        inset: -3px;
+        border-radius: 12px;
         background: linear-gradient(90deg, red, transparent, red);
         background-size: 300% 300%;
-        animation: borderMove 3s linear infinite;
+        animation: borderMove 4s linear infinite;
         z-index: -1;
-        border-radius: 10px;
     }
 
     @keyframes borderMove {
@@ -62,16 +69,18 @@
 
     input, button {
         width: 100%;
-        padding: 10px;
-        margin-top: 10px;
+        padding: 12px;
+        margin-top: 12px;
         border: none;
         border-radius: 5px;
         font-size: 15px;
+        transition: 0.25s ease;
     }
 
     input {
-        background: #222;
+        background: #1a1a1a;
         color: #fff;
+        border: 1px solid #333;
     }
 
     button {
@@ -79,44 +88,64 @@
         color: #fff;
         cursor: pointer;
         font-weight: bold;
+        box-shadow: 0 0 10px red;
+    }
+
+    button:hover {
+        background: #6d0000;
+        transform: scale(1.08);
+        box-shadow: 0 0 15px #ff1a1a;
     }
 
     #activationSection, #loginSection, #generatorSection {
         display: none;
     }
+
+    #copyMsg {
+        color:#0f0;
+        margin-top:8px;
+        font-size:14px;
+    }
+
 </style>
 </head>
 <body>
 
 <!-- صفحة التفعيل -->
-<div class="box" id="activationSection">
+<div class="centerBox" id="activationSection">
     <h3>جاري توليد مفتاح التفعيل...</h3>
     <p>انتظر 10 ثواني</p>
-    <p id="timer">10</p>
+    <p id="timer" style="font-size:22px;color:#ff4444;">10</p>
+
     <p id="generatedKey" style="color:#0f0;font-weight:bold"></p>
+
+    <!-- زر النسخ -->
+    <button id="copyBtn" style="display:none;" onclick="copyKey()">نسخ المفتاح</button>
+    <p id="copyMsg"></p>
 </div>
 
 <!-- صفحة تسجيل الدخول -->
-<div class="box" id="loginSection">
+<div class="centerBox" id="loginSection">
     <h3>تسجيل الدخول</h3>
     <input id="user" placeholder="اليوزر">
     <input id="pass" placeholder="الباسوورد" type="password">
     <input id="key" placeholder="مفتاح التفعيل">
     <button onclick="login()">دخول</button>
-    <p id="loginMsg" style="color:red;"></p>
+    <p id="loginMsg" style="color:#f00;"></p>
 </div>
 
 <!-- صفحة توليد كلمة المرور -->
-<div class="box" id="generatorSection">
-    <h3>مولد كلمات مرور</h3>
+<div class="centerBox" id="generatorSection">
+    <h3>مولّد كلمات مرور Wi-Fi</h3>
     <input id="ssid" placeholder="ضع اسم الشبكة">
     <button onclick="generatePass()">توليد كلمة مرور قوية</button>
-    <p id="result" style="color:#0f0;font-size:18px;margin-top:10px"></p>
+    <p id="result" style="color:#0f0;font-size:20px;margin-top:15px"></p>
 </div>
 
+
 <script>
-/* إنشاء النجوم المتساقطة */
-for (let i = 0; i < 80; i++) {
+/* نجوم */
+for (let i = 0; i < 120; i++) {
     let s = document.createElement("div");
     s.className = "star";
     s.style.left = Math.random() * 100 + "vw";
@@ -130,23 +159,37 @@ document.getElementById("activationSection").style.display = "block";
 let seconds = 10;
 let realActivationKey = "";
 
-/* عداد توليد مفتاح التفعيل */
+/* عداد التفعيل */
 let countdown = setInterval(() => {
     seconds--;
     document.getElementById("timer").innerText = seconds;
 
     if (seconds <= 0) {
         clearInterval(countdown);
-        // توليد مفتاح تفعيل صالح
-        realActivationKey = "KEY-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-        document.getElementById("generatedKey").innerText = "مفتاح التفعيل: " + realActivationKey;
+
+        realActivationKey =
+            "KEY-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+
+        document.getElementById("generatedKey").innerText =
+            "مفتاح التفعيل: " + realActivationKey;
+
+        // إظهار زر النسخ
+        document.getElementById("copyBtn").style.display = "block";
+
         setTimeout(() => {
             document.getElementById("activationSection").style.display = "none";
             document.getElementById("loginSection").style.display = "block";
-        }, 1500);
+        }, 3000);
     }
 }, 1000);
 
+
+/* زر نسخ المفتاح */
+function copyKey() {
+    navigator.clipboard.writeText(realActivationKey).then(() => {
+        document.getElementById("copyMsg").innerText = "✔ تم النسخ!";
+    });
+}
 
 /* تسجيل الدخول */
 function login() {
@@ -162,9 +205,10 @@ function login() {
     }
 }
 
-/* توليد كلمة مرور قوية */
+/* توليد كلمة مرور */
 function generatePass() {
     let ssid = document.getElementById("ssid").value;
+
     if (!ssid) {
         document.getElementById("result").innerText = "يرجى كتابة اسم الشبكة";
         return;
